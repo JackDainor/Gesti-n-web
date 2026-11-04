@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14213d">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>Mis clientes web</title>
+<style>
+:root{--bg:#f3f1ec;--card:#fff;--ink:#14213d;--mut:#5c6578;--line:#dcd8ce;--ok:#1b7f5c;--okbg:#dff3ea;--bad:#a8431f;--badbg:#fbe6dc;--acc:#14213d}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1424;--card:#172038;--ink:#eef0f6;--mut:#9aa4bd;--line:#2a3554;--ok:#6fdcae;--okbg:#14382c;--bad:#ffab85;--badbg:#44251a;--acc:#eef0f6}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+main{max-width:760px;margin:0 auto;padding:16px}
+h1{font-size:1.5rem;margin:8px 0 14px;letter-spacing:-.02em}
+.resumen{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.resumen div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px}
+.resumen b{display:block;font-size:1.15rem}
+.resumen span{font-size:.8rem;color:var(--mut)}
+.barra{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.tabs{display:flex;gap:6px;flex:1}
+button,input{font:inherit;color:inherit}
+.tab{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 14px;cursor:pointer}
+.tab.on{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+.btn{border:0;background:var(--acc);color:var(--bg);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600}
+.btn.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.mini{padding:5px 10px;font-size:.85rem}
+.cli{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--bad);border-radius:10px;padding:12px;margin-bottom:10px}
+.cli.pago{border-left-color:var(--ok)}
+.fila{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.cli h3{margin:0;font-size:1.05rem}
+.cli small{color:var(--mut)}
+.estado{font-size:.8rem;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--badbg);color:var(--bad);white-space:nowrap}
+.pago .estado{background:var(--okbg);color:var(--ok)}
+.datos{display:flex;flex-wrap:wrap;gap:4px 16px;margin:8px 0;font-size:.92rem}
+.datos a{color:var(--ink)}
+.acciones{display:flex;gap:6px;flex-wrap:wrap}
+.vacio{text-align:center;color:var(--mut);padding:30px 10px}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);width:min(440px,94vw);padding:16px}
+dialog::backdrop{background:#0008}
+label{display:block;font-size:.85rem;color:var(--mut);margin-top:10px}
+input{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);margin-top:3px}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#login{max-width:320px;margin:20vh auto;padding:16px}
+:focus-visible{outline:2px solid var(--ok);outline-offset:2px}
+</style>
+</head>
+<body>
+<div id="login" hidden>
+  <h1>Mis clientes web</h1>
+  <label>Clave de acceso<input id="clave" type="password" autocomplete="current-password"></label>
+  <p><button class="btn" id="entrar">Entrar</button></p>
+  <small id="err" style="color:var(--bad)"></small>
+</div>
+<main id="app" hidden>
+  <h1>Mis clientes web</h1>
+  <div class="resumen">
+    <div><b id="rMensual">0</b><span>Cobro mensual total</span></div>
+    <div><b id="rFalta">0</b><span>Falta cobrar este mes</span></div>
+    <div><b id="rVentas">0</b><span>Vendido en total</span></div>
+  </div>
+  <div class="barra">
+    <div class="tabs">
+      <button class="tab on" data-f="todos">Todos</button>
+      <button class="tab" data-f="falta">Falta pagar</button>
+      <button class="tab" data-f="pago">Pagaron</button>
+    </div>
+    <button class="btn" id="nuevo">Agregar cliente</button>
+  </div>
+  <div id="lista"></div>
+</main>
+<dialog id="dlg">
+  <form method="dialog" id="form">
+    <h2 id="dTitulo" style="margin:0 0 4px">Cliente</h2>
+    <label>Nombre del cliente<input name="cliente" required></label>
+    <label>Nombre de su página web<input name="web"></label>
+    <label>Link de la página<input name="url" type="url" placeholder="https://"></label>
+    <label>Link en GitHub<input name="github" type="url" placeholder="https://github.com/"></label>
+    <div class="dos">
+      <label>Precio de venta<input name="precio" type="number" step="any" min="0"></label>
+      <label>Cobro mensual<input name="mensual" type="number" step="any" min="0"></label>
+      <label>Fecha de venta<input name="inicio" type="date" required></label>
+      <label>Meses contratados<input name="meses" type="number" min="1" value="12"></label>
+    </div>
+    <p class="acciones" style="margin-top:14px">
+      <button class="btn" value="ok">Guardar</button>
+      <button class="btn sec" type="button" id="cancelar">Cancelar</button>
+    </p>
+  </form>
+</dialog>
+<script>
+const $ = s => document.querySelector(s);
+let clave = localStorage.getItem('clave') || '', datos = [], filtro = 'todos', editId = null;
+const mesActual = () => new Date().toISOString().slice(0, 7);
+const money = n => '$' + Number(n || 0).toLocaleString('es', { maximumFractionDigits: 2 });
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const link = (u, t) => u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${t}</a>` : '';
+
+async function api(metodo = 'GET', cuerpo, id) {
+  const r = await fetch('/api/clientes' + (id ? '?id=' + id : ''), {
+    method: metodo,
+    headers: { 'Content-Type': 'application/json', 'x-password': clave },
+    body: cuerpo ? JSON.stringify(cuerpo) : undefined
+  });
+  if (r.status === 401) { localStorage.removeItem('clave'); mostrarLogin('Clave incorrecta'); throw 0; }
+  const j = await r.json();
+  if (j.error) { alert('Error: ' + j.error); throw 0; }
+  return j;
+}
+function restante(c) {
+  const fin = new Date(c.inicio + 'T00:00:00'); fin.setMonth(fin.getMonth() + c.meses);
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const dias = Math.ceil((fin - hoy) / 864e5);
+  if (dias < 0) return 'Contrato vencido hace ' + (-dias) + ' días';
+  const m = Math.floor(dias / 30), d = dias % 30;
+  return 'Le quedan ' + (m ? m + (m === 1 ? ' mes ' : ' meses ') : '') + d + ' días';
+}
+function pintar() {
+  const pagoDe = c => c.pagado_mes === mesActual();
+  $('#rMensual').textContent = money(datos.reduce((a, c) => a + c.mensual, 0));
+  $('#rFalta').textContent = money(datos.filter(c => !pagoDe(c)).reduce((a, c) => a + c.mensual, 0));
+  $('#rVentas').textContent = money(datos.reduce((a, c) => a + c.precio, 0));
+  const v = datos.filter(c => filtro === 'todos' || (filtro === 'pago') === pagoDe(c));
+  $('#lista').innerHTML = v.length ? v.map(c => `
+    <div class="cli ${pagoDe(c) ? 'pago' : ''}">
+      <div class="fila"><div><h3>${esc(c.cliente)}</h3><small>${esc(c.web)}</small></div>
+      <span class="estado">${pagoDe(c) ? 'Pagó este mes' : 'Falta pagar'}</span></div>
+      <div class="datos"><span>Vendida en ${money(c.precio)}</span><span>Cobro ${money(c.mensual)}/mes</span>
+      <span>${restante(c)}</span>${link(c.url, 'Ver página')}${link(c.github, 'Ver GitHub')}</div>
+      <div class="acciones">
+        <button class="btn mini" data-a="pagar" data-id="${c.id}">${pagoDe(c) ? 'Quitar pago' : 'Marcar pagado'}</button>
+        <button class="btn mini sec" data-a="editar" data-id="${c.id}">Editar</button>
+        <button class="btn mini sec" data-a="borrar" data-id="${c.id}">Eliminar</button>
+      </div></div>`).join('') : '<p class="vacio">No hay clientes aquí. Agrega el primero con el botón de arriba.</p>';
+}
+async function cargar() { datos = await api(); pintar(); }
+function mostrarLogin(msg) { $('#app').hidden = true; $('#login').hidden = false; $('#err').textContent = msg || ''; }
+async function entrar() {
+  $('#login').hidden = true; $('#app').hidden = false;
+  try { await cargar(); } catch (e) {}
+}
+$('#entrar').onclick = () => { clave = $('#clave').value; localStorage.setItem('clave', clave); entrar(); };
+$('#clave').onkeydown = e => e.key === 'Enter' && $('#entrar').click();
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('on'));
+  t.classList.add('on'); filtro = t.dataset.f; pintar();
+});
+function abrir(c) {
+  editId = c ? c.id : null;
+  $('#dTitulo').textContent = c ? 'Editar cliente' : 'Nuevo cliente';
+  const f = $('#form');
+  f.reset();
+  const vals = c || { inicio: new Date().toISOString().slice(0, 10), meses: 12 };
+  for (const k of ['cliente', 'web', 'url', 'github', 'precio', 'mensual', 'inicio', 'meses']) f.elements[k].value = vals[k] ?? '';
+  $('#dlg').showModal();
+}
+$('#nuevo').onclick = () => abrir();
+$('#cancelar').onclick = () => $('#dlg').close();
+$('#form').onsubmit = async e => {
+  const f = e.target.elements;
+  const body = {};
+  ['cliente', 'web', 'url', 'github', 'inicio'].forEach(k => body[k] = f[k].value);
+  ['precio', 'mensual', 'meses'].forEach(k => body[k] = Number(f[k].value) || 0);
+  if (editId) { body.pagado_mes = datos.find(c => c.id === editId).pagado_mes; await api('PUT', body, editId); }
+  else await api('POST', body);
+  cargar();
+};
+$('#lista').onclick = async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const c = datos.find(x => x.id == b.dataset.id);
+  if (b.dataset.a === 'editar') return abrir(c);
+  if (b.dataset.a === 'borrar') { if (confirm('¿Eliminar a ' + c.cliente + '?')) await api('DELETE', null, c.id); }
+  if (b.dataset.a === 'pagar') await api('PUT', { ...c, pagado_mes: c.pagado_mes === mesActual() ? null : mesActual() }, c.id);
+  cargar();
+};
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+clave ? entrar() : mostrarLogin();
+</script>
+</body>
+</html>
